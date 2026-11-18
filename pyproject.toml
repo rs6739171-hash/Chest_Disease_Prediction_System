@@ -7,7 +7,26 @@ authors = [
     { name = "rs6739171-hash", email = "rs6739171@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "dagshub>=0.7.3",
+    "dvc>=3.67.1",
+    "ensure==1.0.2",
+    "flask>=2.3.3",
+    "flask-cors>=6.0.5",
+    "gdown>=6.5.1",
+    "joblib>=1.5.3",
+    "matplotlib>=3.11.2",
+    "mlflow==2.2.2",
+    "numpy>=1.26.4",
+    "pandas>=2.3.3",
+    "python-box==6.0.2",
+    "pyyaml>=6.0.3",
+    "scipy>=1.17.1",
+    "seaborn>=0.13.2",
+    "tensorflow>=2.18.1",
+    "tqdm>=4.70.1",
+    "types-pyyaml>=6.0.12.20261113",
+]
 
 [project.scripts]
 chest-disease-prediction-system = "chest_disease_prediction_system:main"
