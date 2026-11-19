@@ -12,7 +12,7 @@ app_port         = 8080
 
 # GitHub Self-Hosted Runner
 github_repo_url     = "https://github.com/rs6739171-hash/Chest_Disease_Prediction_System"
-github_runner_token = "CH4MABPTHA4OXLQF2DPVX5TK73YTY"
+github_runner_token = "CH4MABIMCQ6WPBK7N7JJYITK736QY"
 
 # Optional: Explicit VPC / Subnet IDs (leave commented to auto-discover)
 # vpc_id     = "vpc-06a50bf08238b2546"

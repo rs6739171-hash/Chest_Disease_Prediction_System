@@ -1,0 +1,143 @@
+name: Continuous Integration & Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'research/**'
+      - '.gitignore'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ===========================================================================
+  # 1. Continuous Integration (Linting & Code Verification)
+  # ===========================================================================
+  integration:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+
+      - name: Install Linting Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Lint Source Code
+        run: |
+          # Stop build on Python syntax errors or undefined names
+          flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Warning check for complexity and formatting
+          flake8 src --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  # ===========================================================================
+  # 2. Continuous Delivery (Build & Push Docker Image to Amazon ECR)
+  # ===========================================================================
+  build-and-push-ecr:
+    name: Build & Push to Amazon ECR
+    needs: integration
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag, and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME || 'us-visa-approval-app' }}
+          IMAGE_TAG: latest
+        run: |
+          echo "Building Docker container image..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+
+          echo "Pushing Docker image to Amazon ECR..."
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+  # ===========================================================================
+  # 3. Continuous Deployment (Runs on AWS EC2 Self-Hosted Runner)
+  # ===========================================================================
+  deploy-self-hosted:
+    name: Deploy Container to EC2 Instance
+    needs: build-and-push-ecr
+    runs-on: self-hosted
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Pull Latest Docker Image & Restart Application Container
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME || 'us-visa-approval-app' }}
+          IMAGE_TAG: latest
+          CONTAINER_NAME: chest-disease-app
+        run: |
+          echo "Pulling latest Docker image from Amazon ECR..."
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+          echo "Stopping existing container if running..."
+          if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+              docker stop $CONTAINER_NAME || true
+              docker rm -f $CONTAINER_NAME || true
+          fi
+
+          echo "Launching new container on port 8080..."
+          docker run -d \
+            --name $CONTAINER_NAME \
+            -p 8080:8080 \
+            --restart always \
+            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+          echo "Cleaning up dangling and unused images..."
+          docker image prune -f || true
+
+      - name: Health Check Verification
+        run: |
+          echo "Verifying application status..."
+          sleep 5
+          docker ps | grep chest-disease-app
+          curl -f http://localhost:8080/ || exit 1
+          echo "Chest Disease Prediction System is healthy and serving traffic!"

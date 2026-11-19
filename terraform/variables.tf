@@ -82,6 +82,6 @@ variable "github_repo_url" {
 variable "github_runner_token" {
   description = "GitHub Actions registration token from Repo Settings -> Actions -> Runners -> New runner"
   type        = string
-  default     = "CH4MABPTHA4OXLQF2DPVX5TK73YTY"
+  default     = "CH4MABIMCQ6WPBK7N7JJYITK736QY"
   sensitive   = true
 }
