@@ -6,7 +6,7 @@ apt-get update -y
 apt-get upgrade -y
 
 # Install prerequisite utilities
-apt-get install -y ca-certificates curl gnupg lsb-release awscli
+apt-get install -y ca-certificates curl gnupg lsb-release awscli libdigest-sha-perl
 
 # Setup Docker official repository
 mkdir -p /etc/apt/keyrings
@@ -31,5 +31,38 @@ chmod 600 /swapfile
 mkswap /swapfile
 swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+# =============================================================================
+# Automated GitHub Actions Self-Hosted Runner Bootstrapping
+# (Eliminates any manual AWS CLI / Dashboard / SSH execution)
+# =============================================================================
+GITHUB_REPO_URL="${github_repo_url}"
+GITHUB_RUNNER_TOKEN="${github_runner_token}"
+
+if [ -n "$GITHUB_REPO_URL" ] && [ -n "$GITHUB_RUNNER_TOKEN" ]; then
+    echo "=== Auto-registering GitHub Actions Self-Hosted Runner ==="
+    RUNNER_DIR="/home/ubuntu/actions-runner"
+    mkdir -p "$RUNNER_DIR" && cd "$RUNNER_DIR"
+
+    # Download GitHub Actions runner package
+    curl -o actions-runner-linux-x64-2.321.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-linux-x64-2.321.0.tar.gz
+    tar xzf ./actions-runner-linux-x64-2.321.0.tar.gz
+    chown -R ubuntu:ubuntu "$RUNNER_DIR"
+
+    # Configure runner as user ubuntu non-interactively
+    sudo -u ubuntu ./config.sh \
+      --unattended \
+      --url "$GITHUB_REPO_URL" \
+      --token "$GITHUB_RUNNER_TOKEN" \
+      --name "asg-node-$(hostname)" \
+      --work "_work" \
+      --labels "self-hosted,linux,x64" \
+      --replace
+
+    # Install and launch as an automatic systemd background service
+    ./svc.sh install ubuntu
+    ./svc.sh start
+    echo "=== GitHub Self-Hosted Runner Registered and Running Successfully ==="
+fi
 
 echo "=== Auto Scaling Instance Provisioned Successfully ==="

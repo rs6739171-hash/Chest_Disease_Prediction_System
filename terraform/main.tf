@@ -28,8 +28,11 @@ resource "aws_launch_template" "asg_launch_template" {
 
   vpc_security_group_ids = [aws_security_group.asg_sg.id]
 
-  # Cloud-init User Data
-  user_data = filebase64("${path.module}/user_data.sh")
+  # Cloud-init User Data (with automated GitHub Runner setup)
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    github_repo_url     = var.github_repo_url
+    github_runner_token = var.github_runner_token
+  }))
 
   # Storage configuration: 30 GB gp3 root disk for container images and models
   block_device_mappings {

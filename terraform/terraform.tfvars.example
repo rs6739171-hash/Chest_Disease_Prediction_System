@@ -26,3 +26,11 @@ min_size               = 1
 max_size               = 2
 desired_capacity       = 1
 cpu_target_utilization = 70.0
+
+# -----------------------------------------------------------------------------
+# GitHub Actions Self-Hosted Runner (Zero-Dashboard Setup)
+# Provide these so the EC2 instance automatically registers with GitHub on boot.
+# You will NEVER have to SSH into EC2 or execute commands on AWS manually!
+# -----------------------------------------------------------------------------
+github_repo_url     = "https://github.com/rs6739171-hash/Chest_Disease_Prediction_System"
+github_runner_token = "" # Runner registration token from GitHub Repo -> Settings -> Actions -> Runners

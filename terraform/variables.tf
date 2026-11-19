@@ -87,3 +87,19 @@ variable "cpu_target_utilization" {
   type        = number
   default     = 70.0
 }
+
+# -----------------------------------------------------------------------------
+# GitHub Actions Self-Hosted Runner (Zero-Dashboard Setup)
+# -----------------------------------------------------------------------------
+variable "github_repo_url" {
+  description = "https://github.com/rs6739171-hash/Chest_Disease_Prediction_System"
+  type        = string
+  default     = "https://github.com/rs6739171-hash/Chest_Disease_Prediction_System"
+}
+
+variable "github_runner_token" {
+  description = "GitHub Runner Registration Token (obtained from GitHub Repo -> Settings -> Actions -> Runners -> New runner)"
+  type        = string
+  default     = "CH4MABIHQKOWGGP7YOZGVWLK73UUA"
+  sensitive   = true
+}
