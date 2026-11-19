@@ -3,165 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chest Disease Prediction System</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <style>
-        body {
-            background-color: #f4f7f6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .header {
-            background: linear-gradient(135deg, #1f4037, #99f2c8);
-            color: white;
-            padding: 30px 0;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-        .image-preview {
-            width: 100%;
-            height: 320px;
-            border: 2px dashed #007bff;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            background-color: #ffffff;
-            margin-bottom: 20px;
-        }
-        .image-preview img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .btn-predict {
-            background-color: #1f4037;
-            color: white;
-            font-weight: 600;
-            padding: 12px 30px;
-            border-radius: 25px;
-            border: none;
-            transition: all 0.3s;
-        }
-        .btn-predict:hover {
-            background-color: #142a24;
-            color: #99f2c8;
-        }
-        .result-box {
-            font-size: 1.3rem;
-            font-weight: bold;
-            padding: 15px;
-            border-radius: 8px;
-            display: none;
-            margin-top: 20px;
-        }
-        .loader {
-            display: none;
-            border: 6px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 6px solid #1f4037;
-            width: 45px;
-            height: 45px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <title>Chest Disease Prediction System | AI Clinical Radiology</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Standalone Fallback Link -->
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="header text-center">
-        <h1 class="display-4 font-weight-bold">Chest Disease Prediction System</h1>
-        <p class="lead">Deep Learning Classification for Chest CT Scans (Adenocarcinoma vs. Normal)</p>
-    </div>
-
-    <div class="container mb-5">
-        <div class="row justify-content-center">
-            <div class="col-md-7">
-                <div class="card p-4">
-                    <h4 class="mb-3 text-center text-secondary">Upload Chest CT Scan</h4>
-                    <div class="image-preview" id="previewArea">
-                        <span id="placeholderText" class="text-muted">No Image Selected</span>
-                        <img id="selectedImage" src="#" alt="Selected Image" style="display: none;">
-                    </div>
-
-                    <div class="custom-file mb-3">
-                        <input type="file" class="custom-file-input" id="imageUpload" accept="image/*">
-                        <label class="custom-file-label" for="imageUpload">Choose CT scan image file...</label>
-                    </div>
-
-                    <button class="btn btn-predict btn-block mt-2" id="btnPredict" disabled>Run Prediction</button>
-
-                    <div class="loader" id="loadingSpinner"></div>
-                    <div id="result" class="result-box text-center"></div>
+    <div class="app-container">
+        
+        <!-- ==================================================================
+             Header Navigation
+             ================================================================== -->
+        <header class="app-navbar">
+            <div class="brand-section">
+                <div class="brand-icon-wrapper">
+                    <i class="fas fa-lungs"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>
+                        Chest Disease Prediction System
+                        <span class="badge-version">VGG-16 • AI</span>
+                    </h1>
+                    <p>Deep Learning Pulmonary Radiography & CT Scan Diagnostic Classifier</p>
                 </div>
             </div>
-        </div>
+            
+            <div class="nav-actions">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>Model Online • Ready</span>
+                </div>
+                <button class="btn-secondary-action" id="btnTrainPipeline" title="Trigger DVC retraining pipeline">
+                    <i class="fas fa-microchip"></i>
+                    <span>Retrain Model</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ==================================================================
+             Metrics & System Highlights Strip
+             ================================================================== -->
+        <section class="metrics-strip">
+            <div class="metric-pill">
+                <div class="icon"><i class="fas fa-brain"></i></div>
+                <div class="details">
+                    <span class="label">Architecture</span>
+                    <span class="value">VGG-16 Transfer Learning</span>
+                </div>
+            </div>
+            <div class="metric-pill">
+                <div class="icon"><i class="fas fa-bullseye"></i></div>
+                <div class="details">
+                    <span class="label">Target Classes</span>
+                    <span class="value">Adenocarcinoma vs Normal</span>
+                </div>
+            </div>
+            <div class="metric-pill">
+                <div class="icon"><i class="fas fa-vector-square"></i></div>
+                <div class="details">
+                    <span class="label">Input Tensor</span>
+                    <span class="value">224 × 224 × 3 RGB</span>
+                </div>
+            </div>
+            <div class="metric-pill">
+                <div class="icon"><i class="fas fa-network-wired"></i></div>
+                <div class="details">
+                    <span class="label">Experiment Tracker</span>
+                    <span class="value">MLflow & DagsHub</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================================================================
+             Main Interactive Workspace (2 Columns)
+             ================================================================== -->
+        <main class="workspace-grid">
+            
+            <!-- Left Column: Radiographic Scan Ingestion -->
+            <section class="glass-card">
+                <div class="card-header-custom">
+                    <div class="card-title-group">
+                        <i class="fas fa-file-medical-alt icon"></i>
+                        <h2>Chest CT Scan Ingestion</h2>
+                    </div>
+                </div>
+
+                <!-- Sample Selector -->
+                <div class="sample-selector">
+                    <span><i class="fas fa-vial"></i> Quick Test:</span>
+                    <button type="button" class="sample-btn sample-btn-normal" data-sample="normal">
+                        <i class="fas fa-check"></i> Sample Normal
+                    </button>
+                    <button type="button" class="sample-btn sample-btn-cancer" data-sample="cancer">
+                        <i class="fas fa-disease"></i> Sample Cancer
+                    </button>
+                </div>
+
+                <!-- Drag & Drop Zone -->
+                <div class="dropzone-container" id="dropzone">
+                    <input type="file" id="fileInput" class="file-input-hidden" accept="image/png, image/jpeg, image/jpg">
+                    
+                    <!-- Empty State in Dropzone -->
+                    <div class="dropzone-empty" id="dropzoneEmpty">
+                        <div class="dropzone-icon-circle">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3>Upload or Drag & Drop CT Scan</h3>
+                        <p>Supports high-resolution PNG, JPG, and JPEG CT radiography files</p>
+                        <span class="browse-badge">Browse File</span>
+                    </div>
+
+                    <!-- Radiography Viewport with Medical HUD Reticle -->
+                    <div class="preview-wrapper" id="previewWrapper">
+                        <span class="hud-corner hud-tl"></span>
+                        <span class="hud-corner hud-tr"></span>
+                        <span class="hud-corner hud-bl"></span>
+                        <span class="hud-corner hud-br"></span>
+                        <div class="scan-laser" id="scanLaser"></div>
+                        <img id="previewImage" src="#" alt="CT Scan Preview">
+                    </div>
+                </div>
+
+                <!-- Image Metadata Bar -->
+                <div class="image-meta-bar" id="imageMetaBar">
+                    <span class="filename" id="metaFilename">image.png</span>
+                    <span id="metaDim">224 × 224 px</span>
+                    <span id="metaSize">78 KB</span>
+                </div>
+
+                <!-- Actions -->
+                <div class="action-buttons-group">
+                    <button class="btn-primary-custom" id="btnPredict" disabled>
+                        <i class="fas fa-microscope"></i>
+                        <span>Analyze CT Scan</span>
+                    </button>
+                    <button class="btn-reset-custom" id="btnReset" title="Reset Image">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Right Column: AI Diagnostic Assessment -->
+            <section class="glass-card">
+                <div class="card-header-custom">
+                    <div class="card-title-group">
+                        <i class="fas fa-stethoscope icon"></i>
+                        <h2>Diagnostic AI Assessment</h2>
+                    </div>
+                </div>
+
+                <div class="assessment-viewport">
+                    
+                    <!-- State 1: Awaiting Scan -->
+                    <div class="state-empty" id="stateEmpty">
+                        <div class="pulse-radar">
+                            <i class="fas fa-satellite-dish"></i>
+                        </div>
+                        <h3>Awaiting Scan Intake</h3>
+                        <p>Upload a chest CT scan or select a sample image on the left to initialize convolutional neural inference.</p>
+                    </div>
+
+                    <!-- State 2: Scanning & Processing -->
+                    <div class="state-loading" id="stateLoading">
+                        <div class="medical-spinner">
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
+                        </div>
+                        <div class="loading-steps">
+                            <div class="loading-step-item active">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Tensor Rescaling & Normalization (224×224)</span>
+                            </div>
+                            <div class="loading-step-item">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                                <span>Extracting 512-dim VGG-16 Feature Maps</span>
+                            </div>
+                            <div class="loading-step-item">
+                                <i class="far fa-circle"></i>
+                                <span>Softmax Posterior Probability Calculation</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- State 3: Diagnostic Result -->
+                    <div class="state-result" id="stateResult">
+                        
+                        <!-- Diagnosis Banner -->
+                        <div class="diagnosis-banner" id="diagnosisBanner">
+                            <div class="banner-icon-box">
+                                <i class="fas fa-check-circle" id="diagnosisIcon"></i>
+                            </div>
+                            <div class="banner-content">
+                                <div class="tag" id="diagnosisTag">Diagnostic Finding</div>
+                                <div class="diagnosis-title" id="diagnosisTitle">Normal</div>
+                                <div class="diagnosis-desc" id="diagnosisDesc">No abnormalities detected.</div>
+                            </div>
+                        </div>
+
+                        <!-- Confidence Bar -->
+                        <div class="confidence-box">
+                            <div class="confidence-header">
+                                <span><i class="fas fa-tachometer-alt"></i> Model Confidence Score</span>
+                                <span class="confidence-val" id="confidenceVal">--</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="confidenceProgress"></div>
+                            </div>
+                        </div>
+
+                        <!-- Clinical Insight Summary -->
+                        <div class="insights-card">
+                            <h4><i class="fas fa-notes-medical"></i> Clinical Radiographic Insight</h4>
+                            <p id="clinicalInsightText">
+                                Scan analysis complete. The convolutional neural network evaluated lung density and architectural patterns.
+                            </p>
+                        </div>
+
+                        <!-- Action Toolbar -->
+                        <div class="result-actions">
+                            <button class="btn-report" id="btnPrintReport">
+                                <i class="fas fa-print"></i> Print Clinical Report
+                            </button>
+                            <button class="btn-report" id="btnExportJson">
+                                <i class="fas fa-file-code"></i> Export JSON
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+
+        <!-- ==================================================================
+             Bottom Specifications & Architecture Section
+             ================================================================== -->
+        <section class="specs-section">
+            <h3 class="section-headline">
+                <i class="fas fa-layer-group text-info"></i> Pipeline Architecture & Technical Specs
+            </h3>
+            <div class="specs-grid">
+                <div class="spec-card">
+                    <div class="spec-card-header">
+                        <div class="icon-circle"><i class="fas fa-network-wired"></i></div>
+                        <h3>Deep Feature Extractor</h3>
+                    </div>
+                    <p>
+                        Pre-trained VGG-16 backbone with 13 convolutional and 5 max-pooling layers initialized on ImageNet weights to extract low and high-level pulmonary tissue patterns.
+                    </p>
+                    <div class="spec-tags">
+                        <span class="spec-tag">14,714,688 Params</span>
+                        <span class="spec-tag">Frozen Backbone</span>
+                        <span class="spec-tag">Block5_Conv3</span>
+                    </div>
+                </div>
+
+                <div class="spec-card">
+                    <div class="spec-card-header">
+                        <div class="icon-circle"><i class="fas fa-filter"></i></div>
+                        <h3>Classification Head</h3>
+                    </div>
+                    <p>
+                        Global Flattening followed by Dense layer with ReLU activations, Dropout regularization to mitigate overfitting, and Softmax output distribution.
+                    </p>
+                    <div class="spec-tags">
+                        <span class="spec-tag">Dense (2 Units)</span>
+                        <span class="spec-tag">Softmax Activation</span>
+                        <span class="spec-tag">Categorical Crossentropy</span>
+                    </div>
+                </div>
+
+                <div class="spec-card">
+                    <div class="spec-card-header">
+                        <div class="icon-circle"><i class="fas fa-sync-alt"></i></div>
+                        <h3>MLOps & Reproducibility</h3>
+                    </div>
+                    <p>
+                        Modular pipelines versioned via DVC stages (Data Ingestion, Model Preparation, Training, Evaluation) tracked synchronously in DagsHub MLflow.
+                    </p>
+                    <div class="spec-tags">
+                        <span class="spec-tag">DVC Pipelines</span>
+                        <span class="spec-tag">MLflow Tracking</span>
+                        <span class="spec-tag">DagsHub Remote</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================================================================
+             Footer
+             ================================================================== -->
+        <footer class="app-footer">
+            <div class="disclaimer-badge">
+                <i class="fas fa-info-circle"></i>
+                <span><strong>Clinical Research Notice:</strong> This Deep Learning system is developed for academic, educational, and clinical research benchmarking. In clinical settings, AI evaluations must be confirmed by a board-certified radiologist.</span>
+            </div>
+            <div class="footer-credits">
+                Chest Disease Prediction System &bull; Powered by TensorFlow & Flask &bull; VGG-16 Classifier
+            </div>
+        </footer>
+
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script>
-        var base64Image = "";
-
-        $("#imageUpload").change(function () {
-            var file = this.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    $('#selectedImage').attr('src', e.target.result).show();
-                    $('#placeholderText').hide();
-                    base64Image = e.target.result.split(',')[1];
-                    $('#btnPredict').prop('disabled', false);
-                    $('#result').hide();
-                };
-                reader.readAsDataURL(file);
-                $(this).next('.custom-file-label').html(file.name);
-            }
-        });
-
-        $("#btnPredict").click(function () {
-            if (!base64Image) return;
-
-            $("#loadingSpinner").show();
-            $("#result").hide();
-            $(this).prop('disabled', true);
-
-            $.ajax({
-                url: "/predict",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({ image: base64Image }),
-                success: function (response) {
-                    $("#loadingSpinner").hide();
-                    $("#btnPredict").prop('disabled', false);
-                    if (response && response.length > 0) {
-                        var pred = response[0].image;
-                        var alertClass = (pred === 'Normal') ? 'alert-success' : 'alert-danger';
-                        $("#result")
-                            .removeClass('alert-success alert-danger')
-                            .addClass('alert ' + alertClass)
-                            .html("Prediction: " + pred)
-                            .fadeIn();
-                    }
-                },
-                error: function (error) {
-                    $("#loadingSpinner").hide();
-                    $("#btnPredict").prop('disabled', false);
-                    $("#result")
-                        .removeClass('alert-success')
-                        .addClass('alert alert-danger')
-                        .html("Error: Failed to process image")
-                        .fadeIn();
-                }
-            });
-        });
-    </script>
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Standalone Fallback Script -->
+    <script src="/static/js/main.js"></script>
 </body>
 </html>

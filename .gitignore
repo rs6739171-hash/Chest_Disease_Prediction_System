@@ -69,3 +69,6 @@ scores.json
 # Operating System Files
 .DS_Store
 Thumbs.db
+
+# Runtime Prediction Temp Files
+inputImage.jpg

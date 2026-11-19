@@ -1,0 +1,48 @@
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Git & IDE configs
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary & runtime files
+inputImage.jpg
+*.log
+logs/
+.ipynb_checkpoints/
+research/
+
+# DVC & MLflow local runs (keep artifacts folder containing models)
+.dvc/cache/
+.dvc/tmp/
+mlruns/
+.mlflow/

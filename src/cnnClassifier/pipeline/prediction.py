@@ -20,12 +20,13 @@ class PredictionPipeline:
         test_image = tf.keras.preprocessing.image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis=0)
         test_image = test_image / 255.0
-        result = np.argmax(model.predict(test_image), axis=1)
+        raw_pred = model.predict(test_image)
+        result = np.argmax(raw_pred, axis=1)
+        confidence = float(np.max(raw_pred)) * 100
 
         if result[0] == 1:
             prediction = 'Normal'
-            return [{"image": prediction}]
         else:
             prediction = 'Adenocarcinoma Cancer'
-            return [{"image": prediction}]
+        return [{"image": prediction, "confidence": round(confidence, 2)}]
 
