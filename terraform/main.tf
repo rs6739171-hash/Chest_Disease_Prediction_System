@@ -1,40 +1,21 @@
 # =============================================================================
-# AMI Data Source (Ubuntu 22.04 LTS for ap-south-1)
-# =============================================================================
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical official AWS account ID
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
-# =============================================================================
-# Launch Template
+# Launch Template (EC2 Instance Configuration)
 # =============================================================================
 resource "aws_launch_template" "asg_launch_template" {
   name_prefix   = "${var.project_name}-lt-"
   description   = "Launch template for Chest Disease Prediction ASG instances"
   image_id      = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
-  key_name      = var.key_name != "" ? var.key_name : null
 
   vpc_security_group_ids = [aws_security_group.asg_sg.id]
 
-  # Cloud-init User Data (with automated GitHub Runner setup)
+  # Automated User Data configuration
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     github_repo_url     = var.github_repo_url
     github_runner_token = var.github_runner_token
   }))
 
-  # Storage configuration: 30 GB gp3 root disk for container images and models
+  # Root disk configuration (30 GB gp3 for container images & model cache)
   block_device_mappings {
     device_name = "/dev/sda1"
 
@@ -89,7 +70,7 @@ resource "aws_autoscaling_group" "app_asg" {
     version = "$Latest"
   }
 
-  # Zero-downtime rolling replacement when launch template changes
+  # Zero-downtime rolling deployment
   instance_refresh {
     strategy = "Rolling"
     preferences {
@@ -118,7 +99,7 @@ resource "aws_autoscaling_group" "app_asg" {
 }
 
 # =============================================================================
-# Target Tracking Scaling Policy (Scale based on Average CPU Utilization)
+# CPU Target Tracking Auto Scaling Policy
 # =============================================================================
 resource "aws_autoscaling_policy" "cpu_target_tracking_policy" {
   name                   = "${var.project_name}-cpu-target-tracking"

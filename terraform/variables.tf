@@ -1,65 +1,47 @@
 variable "aws_region" {
-  description = "AWS Region for deployment"
+  description = "AWS region for deployment"
   type        = string
   default     = "ap-south-1"
 }
 
-variable "environment" {
-  description = "Environment name (e.g. dev, staging, prod)"
-  type        = string
-  default     = "production"
-}
-
 variable "project_name" {
-  description = "Name of the project used for resource naming"
+  description = "Project name prefix for AWS resources"
   type        = string
   default     = "chest-disease-prediction"
 }
 
-# -----------------------------------------------------------------------------
-# Existing Networking Inputs (Optional: Leave empty to auto-discover)
-# -----------------------------------------------------------------------------
-variable "vpc_id" {
-  description = "Optional ID of the existing VPC. Leave empty to auto-discover using data sources."
+variable "environment" {
+  description = "Deployment environment (e.g., production, staging)"
   type        = string
-  default     = ""
+  default     = "production"
 }
 
-variable "vpc_name_tag" {
-  description = "Optional Name tag of the existing VPC to filter by (e.g. 'my-vpc')"
+# -----------------------------------------------------------------------------
+# Existing Networking Configuration (Auto-discovered if left blank)
+# -----------------------------------------------------------------------------
+variable "vpc_id" {
+  description = "Optional existing VPC ID. If left empty, auto-discovers your previous custom VPC."
   type        = string
   default     = ""
 }
 
 variable "subnet_ids" {
-  description = "Optional explicit list of subnet IDs. Leave empty to auto-discover from the VPC."
+  description = "Optional existing subnet IDs list. If left empty, auto-discovers from the selected VPC."
   type        = list(string)
   default     = []
 }
 
-variable "subnet_name_tag" {
-  description = "Optional Name tag filter for subnets (e.g. '*public*'). Leave empty to pull all subnets in the VPC."
-  type        = string
-  default     = ""
-}
-
 # -----------------------------------------------------------------------------
-# EC2 & Auto Scaling Configuration
+# EC2 & Auto Scaling Group Parameters
 # -----------------------------------------------------------------------------
 variable "instance_type" {
-  description = "EC2 instance type (t3.medium recommended for TensorFlow model inference)"
+  description = "EC2 instance type (t3.medium recommended for deep learning inference)"
   type        = string
   default     = "t3.medium"
 }
 
-variable "key_name" {
-  description = "Optional EC2 Key Pair name for SSH access (leave empty if using SSM Session Manager)"
-  type        = string
-  default     = null
-}
-
 variable "app_port" {
-  description = "Port exposed by the Chest Disease Prediction Flask web application"
+  description = "Web application listening port"
   type        = number
   default     = 8080
 }
@@ -83,22 +65,22 @@ variable "desired_capacity" {
 }
 
 variable "cpu_target_utilization" {
-  description = "Target average CPU percentage to trigger auto-scaling"
+  description = "Target CPU utilization percentage for auto scaling policy"
   type        = number
   default     = 70.0
 }
 
 # -----------------------------------------------------------------------------
-# GitHub Actions Self-Hosted Runner (Zero-Dashboard Setup)
+# GitHub Actions Self-Hosted Runner
 # -----------------------------------------------------------------------------
 variable "github_repo_url" {
-  description = "https://github.com/rs6739171-hash/Chest_Disease_Prediction_System"
+  description = "Target GitHub repository URL for the self-hosted runner"
   type        = string
   default     = "https://github.com/rs6739171-hash/Chest_Disease_Prediction_System"
 }
 
 variable "github_runner_token" {
-  description = "GitHub Runner Registration Token (obtained from GitHub Repo -> Settings -> Actions -> Runners -> New runner)"
+  description = "GitHub Actions registration token from Repo Settings -> Actions -> Runners -> New runner"
   type        = string
   default     = "CH4MABPTHA4OXLQF2DPVX5TK73YTY"
   sensitive   = true

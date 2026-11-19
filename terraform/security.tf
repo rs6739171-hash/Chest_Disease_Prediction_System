@@ -1,46 +1,48 @@
-# Security Group for Auto Scaling Group EC2 Instances
+# =============================================================================
+# Security Group for Auto Scaling Group Instances
+# =============================================================================
 resource "aws_security_group" "asg_sg" {
   name_prefix = "${var.project_name}-asg-sg-"
   description = "Security group for Chest Disease Prediction ASG instances"
   vpc_id      = data.aws_vpc.existing.id
 
-  # Ingress for Flask Web Application
+  # Port 8080 for Flask prediction dashboard
   ingress {
-    description = "Allow inbound traffic to Flask Web App on port 8080"
+    description = "Allow inbound Flask app traffic"
     from_port   = var.app_port
     to_port     = var.app_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Ingress for HTTP
+  # Port 80 for HTTP
   ingress {
-    description = "Allow inbound HTTP"
+    description = "Allow HTTP traffic"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Ingress for HTTPS
+  # Port 443 for HTTPS
   ingress {
-    description = "Allow inbound HTTPS"
+    description = "Allow HTTPS traffic"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Ingress for SSH (Optional - SSM Session Manager is preferred)
+  # Port 22 for SSH management
   ingress {
-    description = "Allow SSH from anywhere (restrict in production)"
+    description = "Allow SSH management"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Outbound rule
+  # Allow all outbound connections
   egress {
     description = "Allow all outbound traffic"
     from_port   = 0
