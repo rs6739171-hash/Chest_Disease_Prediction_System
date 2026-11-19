@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chest Disease Prediction System</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .header {
+            background: linear-gradient(135deg, #1f4037, #99f2c8);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .image-preview {
+            width: 100%;
+            height: 320px;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #ffffff;
+            margin-bottom: 20px;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .btn-predict {
+            background-color: #1f4037;
+            color: white;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            transition: all 0.3s;
+        }
+        .btn-predict:hover {
+            background-color: #142a24;
+            color: #99f2c8;
+        }
+        .result-box {
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            margin-top: 20px;
+        }
+        .loader {
+            display: none;
+            border: 6px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 6px solid #1f4037;
+            width: 45px;
+            height: 45px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <h1 class="display-4 font-weight-bold">Chest Disease Prediction System</h1>
+        <p class="lead">Deep Learning Classification for Chest CT Scans (Adenocarcinoma vs. Normal)</p>
+    </div>
+
+    <div class="container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7">
+                <div class="card p-4">
+                    <h4 class="mb-3 text-center text-secondary">Upload Chest CT Scan</h4>
+                    <div class="image-preview" id="previewArea">
+                        <span id="placeholderText" class="text-muted">No Image Selected</span>
+                        <img id="selectedImage" src="#" alt="Selected Image" style="display: none;">
+                    </div>
+
+                    <div class="custom-file mb-3">
+                        <input type="file" class="custom-file-input" id="imageUpload" accept="image/*">
+                        <label class="custom-file-label" for="imageUpload">Choose CT scan image file...</label>
+                    </div>
+
+                    <button class="btn btn-predict btn-block mt-2" id="btnPredict" disabled>Run Prediction</button>
+
+                    <div class="loader" id="loadingSpinner"></div>
+                    <div id="result" class="result-box text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+        var base64Image = "";
+
+        $("#imageUpload").change(function () {
+            var file = this.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#selectedImage').attr('src', e.target.result).show();
+                    $('#placeholderText').hide();
+                    base64Image = e.target.result.split(',')[1];
+                    $('#btnPredict').prop('disabled', false);
+                    $('#result').hide();
+                };
+                reader.readAsDataURL(file);
+                $(this).next('.custom-file-label').html(file.name);
+            }
+        });
+
+        $("#btnPredict").click(function () {
+            if (!base64Image) return;
+
+            $("#loadingSpinner").show();
+            $("#result").hide();
+            $(this).prop('disabled', true);
+
+            $.ajax({
+                url: "/predict",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ image: base64Image }),
+                success: function (response) {
+                    $("#loadingSpinner").hide();
+                    $("#btnPredict").prop('disabled', false);
+                    if (response && response.length > 0) {
+                        var pred = response[0].image;
+                        var alertClass = (pred === 'Normal') ? 'alert-success' : 'alert-danger';
+                        $("#result")
+                            .removeClass('alert-success alert-danger')
+                            .addClass('alert ' + alertClass)
+                            .html("Prediction: " + pred)
+                            .fadeIn();
+                    }
+                },
+                error: function (error) {
+                    $("#loadingSpinner").hide();
+                    $("#btnPredict").prop('disabled', false);
+                    $("#result")
+                        .removeClass('alert-success')
+                        .addClass('alert alert-danger')
+                        .html("Error: Failed to process image")
+                        .fadeIn();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
