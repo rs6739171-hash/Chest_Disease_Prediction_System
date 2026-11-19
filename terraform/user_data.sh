@@ -1,56 +1,40 @@
 #!/bin/bash
-set -euxo pipefail
 
-# Update packages
-apt-get update -y
-apt-get upgrade -y
+# Fix AWS regional mirror 503 error by switching to Canonical's main archive
+sed -i 's/ap-south-1.ec2.archive.ubuntu.com/archive.ubuntu.com/g' /etc/apt/sources.list
+sed -i 's/ap-south-1.ec2.ports.ubuntu.com/ports.ubuntu.com/g' /etc/apt/sources.list
 
-# Install prerequisite utilities
-apt-get install -y ca-certificates curl gnupg lsb-release awscli libdigest-sha-perl
+# Update package index with retry
+apt-get update -y || (sleep 5 && apt-get update -y)
 
-# Setup Docker official repository
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# Install Docker, curl, and extraction tools directly from official Ubuntu repositories
+DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io curl tar ca-certificates
 
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Install Docker engine
-apt-get update -y
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-# Start and enable Docker
+# Start and enable Docker daemon
 systemctl start docker
 systemctl enable docker
 usermod -aG docker ubuntu
-
-# Allocate 2GB Swap file to ensure smooth Deep Learning inference memory headroom
-fallocate -l 2G /swapfile
-chmod 600 /swapfile
-mkswap /swapfile
-swapon /swapfile
-echo '/swapfile none swap sw 0 0' >> /etc/fstab
+chmod 666 /var/run/docker.sock || true
 
 # =============================================================================
 # Automated GitHub Actions Self-Hosted Runner Bootstrapping
-# (Eliminates any manual AWS CLI / Dashboard / SSH execution)
 # =============================================================================
 GITHUB_REPO_URL="${github_repo_url}"
 GITHUB_RUNNER_TOKEN="${github_runner_token}"
 
 if [ -n "$GITHUB_REPO_URL" ] && [ -n "$GITHUB_RUNNER_TOKEN" ]; then
-    echo "=== Auto-registering GitHub Actions Self-Hosted Runner ==="
     RUNNER_DIR="/home/ubuntu/actions-runner"
-    mkdir -p "$RUNNER_DIR" && cd "$RUNNER_DIR"
+    mkdir -p "$RUNNER_DIR"
+    cd "$RUNNER_DIR"
 
-    # Download GitHub Actions runner package (latest v2.338.2)
-    curl -o actions-runner-linux-x64-2.338.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz
-    tar xzf ./actions-runner-linux-x64-2.338.2.tar.gz
+    # Download GitHub Actions runner package (v2.338.2)
+    curl -o runner.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz
+    tar xzf ./runner.tar.gz
     chown -R ubuntu:ubuntu "$RUNNER_DIR"
 
-    # Configure runner as user ubuntu non-interactively
-    sudo -u ubuntu ./config.sh \
+    # Configure runner as user ubuntu with correct HOME directory
+    export HOME=/home/ubuntu
+    sudo -H -u ubuntu ./config.sh \
       --unattended \
       --url "$GITHUB_REPO_URL" \
       --token "$GITHUB_RUNNER_TOKEN" \
