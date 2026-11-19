@@ -26,8 +26,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application source code and configurations
 COPY . /app
 
-# Install local package in editable mode
-RUN pip install --no-cache-dir -e .
+# Install local package in editable mode without re-resolving dependencies
+RUN pip install --no-cache-dir -e . --no-deps
 
 # Expose web application port
 EXPOSE 8080

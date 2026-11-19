@@ -25,7 +25,6 @@ dependencies = [
     "seaborn>=0.12.0",
     "setuptools<70",
     "tensorflow==2.12.0",
-    "tensorflow-intel==2.12.0",
     "tqdm>=4.70.1",
     "types-pyyaml>=6.0.12.20261113",
 ]
@@ -34,8 +33,5 @@ dependencies = [
 chest-disease-prediction-system = "chest_disease_prediction_system:main"
 
 [build-system]
-requires = ["uv_build>=0.12.1,<0.13.0"]
-build-backend = "uv_build"
-
-[tool.uv]
-required-environments = ["sys_platform == 'win32' and platform_machine == 'AMD64'"]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
