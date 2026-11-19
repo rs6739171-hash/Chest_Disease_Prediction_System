@@ -20,13 +20,15 @@ class DataIngestion:
             dataset_url = self.config.source_URL
             zip_download_dir = self.config.local_data_file
             os.makedirs("artifacts/data_ingestion", exist_ok=True)
-            logger.info(f"Downloading data from {dataset_url} into file {zip_download_dir}")
-
-            file_id = dataset_url.split("/")[-2]
-            prefix = "https://drive.google.com/uc?/export=download&id="
-            gdown.download(prefix + file_id, str(zip_download_dir))
-
-            logger.info(f"Downloaded data from {dataset_url} into file {zip_download_dir}")
+            
+            if not os.path.exists(zip_download_dir):
+                logger.info(f"Downloading data from {dataset_url} into file {zip_download_dir}")
+                file_id = dataset_url.split("/")[-2]
+                prefix = "https://drive.google.com/uc?/export=download&id="
+                gdown.download(prefix + file_id, str(zip_download_dir))
+                logger.info(f"Downloaded data from {dataset_url} into file {zip_download_dir}")
+            else:
+                logger.info(f"File already exists of size: {get_size(Path(zip_download_dir))}")
 
         except Exception as e:
             raise e

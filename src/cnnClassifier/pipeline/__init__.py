@@ -1,1 +1,2 @@
 from cnnClassifier.pipeline.stage_01_data_ingestion import DataIngestionTrainingPipeline
+from cnnClassifier.pipeline.stage_02_prepare_basemodel import PrepareBaseModelTrainingPipeline
