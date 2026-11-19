@@ -1,0 +1,28 @@
+# =============================================================================
+# Terraform Variable Values Example
+# Region: ap-south-1
+# =============================================================================
+
+aws_region   = "ap-south-1"
+environment  = "production"
+project_name = "chest-disease-prediction"
+
+# -----------------------------------------------------------------------------
+# Existing Networking Auto-Discovery
+# Option 1: Leave blank to automatically pull your existing custom VPC and Subnets
+# Option 2: Filter by Name tag (e.g. vpc_name_tag = "my-previous-vpc")
+# Option 3: Explicitly specify vpc_id = "vpc-xxx" and subnet_ids = ["subnet-xxx"]
+# -----------------------------------------------------------------------------
+vpc_id          = "" # Leave empty for auto-discovery
+vpc_name_tag    = "" # (Optional) Filter VPC by Name tag
+subnet_ids      = [] # Leave empty for auto-discovery
+subnet_name_tag = "" # (Optional) Filter subnets by Name tag (e.g. "*public*")
+
+# EC2 & Auto Scaling configuration
+instance_type          = "t3.medium"
+key_name               = "" # Optional EC2 Key Pair name
+app_port               = 8080
+min_size               = 1
+max_size               = 2
+desired_capacity       = 1
+cpu_target_utilization = 70.0

@@ -72,3 +72,17 @@ Thumbs.db
 
 # Runtime Prediction Temp Files
 inputImage.jpg
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
