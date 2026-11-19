@@ -11,10 +11,6 @@ on:
       - 'LICENSE'
   workflow_dispatch:
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   # ===========================================================================
   # 1. Continuous Integration (Linting & Code Verification)
@@ -51,6 +47,10 @@ jobs:
     name: Build & Push to Amazon ECR
     needs: integration
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -86,6 +86,10 @@ jobs:
     name: Deploy Container to EC2 Instance
     needs: build-and-push-ecr
     runs-on: self-hosted
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'ap-south-1' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
