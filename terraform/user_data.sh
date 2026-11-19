@@ -44,9 +44,9 @@ if [ -n "$GITHUB_REPO_URL" ] && [ -n "$GITHUB_RUNNER_TOKEN" ]; then
     RUNNER_DIR="/home/ubuntu/actions-runner"
     mkdir -p "$RUNNER_DIR" && cd "$RUNNER_DIR"
 
-    # Download GitHub Actions runner package
-    curl -o actions-runner-linux-x64-2.321.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-linux-x64-2.321.0.tar.gz
-    tar xzf ./actions-runner-linux-x64-2.321.0.tar.gz
+    # Download GitHub Actions runner package (latest v2.338.2)
+    curl -o actions-runner-linux-x64-2.338.2.tar.gz -L https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz
+    tar xzf ./actions-runner-linux-x64-2.338.2.tar.gz
     chown -R ubuntu:ubuntu "$RUNNER_DIR"
 
     # Configure runner as user ubuntu non-interactively

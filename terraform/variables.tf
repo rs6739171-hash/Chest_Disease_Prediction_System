@@ -100,6 +100,6 @@ variable "github_repo_url" {
 variable "github_runner_token" {
   description = "GitHub Runner Registration Token (obtained from GitHub Repo -> Settings -> Actions -> Runners -> New runner)"
   type        = string
-  default     = "CH4MABIHQKOWGGP7YOZGVWLK73UUA"
+  default     = "CH4MABPTHA4OXLQF2DPVX5TK73YTY"
   sensitive   = true
 }
